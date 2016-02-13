@@ -28,6 +28,9 @@ struct busmap{
   struct device *device;
 };
 
+typedef struct cpu_flags{
+  unsigned c:1, z:1, n:1, v:1;
+  } cpu_flags;
 
 
 struct busmap *bus_maps;
@@ -38,8 +41,19 @@ uword bus_readw(paddr addr);
 void bus_writeb(paddr addr, ubyte val);
 void bus_writew(paddr addr, uword val);
 
-void cpu_writereg(int no, uword val);
-uword cpu_readreg(int no);
+void cpu_write_reg(int no, uword val);
+uword cpu_read_reg(int no);
+vaddr cpu_read_pc();
+void cpu_write_pc(vaddr new_pc);
+vaddr cpu_read_inc_pc();
+cpu_flags cpu_read_flags();
+void cpu_write_cflag(int f);
+void cpu_write_zflag(int f);
+void cpu_write_nflag(int f);
+void cpu_write_vflag(int f);
+uword cpu_read_flag_uword();
+void cpu_write_flag_uword(uword f);
+
 void cpu_init();
 void cpu_step();
 

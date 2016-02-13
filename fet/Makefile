@@ -1,6 +1,13 @@
 
+fet_objs=fet.o bus.o cpu_instr.o cpu_state.o
 
-fet: fet.o bus.o cpu.o
-	gcc -o fet fet.o bus.o cpu.o
+CC=gcc
+CFLAGS=-Wall -Wextra -std=c99 -pedantic
 
-fet.o bus.o cpu.o: fet.h
+fet: $(fet_objs)
+	$(CC) $(CFLAGS) -o fet $(fet_objs)
+
+$(fet_objs): fet.h
+
+clean:
+	rm -f $(fet_objs)
