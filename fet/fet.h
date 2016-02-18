@@ -13,29 +13,42 @@ typedef int8_t   sbyte;
 typedef uint16_t vaddr;
 typedef uint32_t paddr;
 
+typedef struct device device;
 struct device{
-  void (*init)(void);
-  void (*writeb)(paddr, ubyte);
-  void (*writew)(paddr, uword);
-  ubyte (*readb)(paddr);
-  uword (*readw)(paddr);
-  //void (*debug)(void (*)(const char *, const char *, ...));
+  char *name;
+  int n_mapped;
+  paddr map_length;
+  device *(*init)(char *name, paddr start, char **argv);
+  void (*writeb)(device *dev, paddr, ubyte);
+  void (*writew)(device *dev, paddr, uword);
+  ubyte (*readb)(device *dev, paddr);
+  uword (*readw)(device *dev, paddr);
+  void (*console_command)(device *dev, char **firstline);
+  int (*lookup_reg)(paddr *addr, device *dev, char *name);
   };
 
-struct busmap{
+extern device *devices[];
+int ndevices;
+
+device *find_dev(char *name);
+
+typedef struct busmap{
   paddr start, end;
   struct busmap *next;
-  struct device *device;
-};
+  struct device *dev;
+  char *name;
+  }busmap;
+
+busmap *bus_maps;
+
+void signal_bus_error(char *what, paddr where);
 
 typedef struct cpu_flags{
   unsigned c:1, z:1, n:1, v:1;
   } cpu_flags;
 
 
-struct busmap *bus_maps;
-
-void bus_mapdev(struct device *device, paddr start, paddr end);
+void bus_mapdev(device *device, paddr start, char *name, char **argv);
 ubyte bus_readb(paddr addr);
 uword bus_readw(paddr addr);
 void bus_writeb(paddr addr, ubyte val);
