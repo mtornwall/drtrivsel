@@ -1,11 +1,33 @@
+#include<stdlib.h>
 #include<stdio.h>
 #include"fet.h"
 
 
-static struct device *init(char *name, paddr start, char **argv){
-printf("uart init");
+typedef struct{
+  device dev;
+  }uart;
+
+device dev_uart;  // Defined at the bottom of this file
+
+
+static device *create(char *name, paddr start, char **argv){
+  uart *uart;
+printf("uart create\n");
 for(; *argv; argv++)printf(" %s", *argv);
 putchar('\n');
+
+  uart=malloc(sizeof(*uart));
+  uart->dev=dev_uart;
+  uart->dev.argv_temp=argv;
+  uart->dev.start=start;
+  uart->dev.end=start+3;
+  uart->dev.n_mapped=-1;     // So we can tell that this device struct is a
+                             // mapped device and not the devtype struct
+  return (device *)uart;
+  }
+
+static int init(device *dev){
+printf("uart init");
 return 0;
   }
 
@@ -32,6 +54,7 @@ static int lookup_reg(paddr *addr, device *dev, char *name){
 
 
 device dev_uart={
-  "uart", 0, 3,
-  init, writeb, writew, readb, readw, console_command, lookup_reg
+  "uart",            // typename
+  0, 0, 0, 0, 0, 0,  // devname, n_mapped, argv_temp, start, end, next
+  create, init, writeb, writew, readb, readw, console_command, lookup_reg
   };

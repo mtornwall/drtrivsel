@@ -6,63 +6,95 @@
 #include"fet.h"
 
 
-void bus_mapdev(device *dev, paddr start, char *name, char **argv){
-  busmap **m, *map = malloc(sizeof *map);
+void bus_mapdev(device *devtype, paddr start, char *name, char **argv){
+  device **d, *dev;
+  int occupied=0;
 
-  if(!name)asprintf(&(map->name), "%s%d", dev->name, dev->n_mapped);
-  else map->name=strdup(name);
+  if(!name)asprintf(&name, "%s%d", devtype->typename, devtype->n_mapped);
+  else name=strdup(name);
 
-  map->dev=dev->init(map->name, start, argv);
+  dev=devtype->create(name, start, argv);
+  if(!dev){
+    free(name);
+    return;
+    }
 
-  map->start = start;
-  map->end = start+map->dev->map_length;
+  dev->devname=name;
 
-  m=&bus_maps;
-  while(*m && (*m)->start<start)m=&((*m)->next);
+  d=&bus_mapped_devices;
+  while(*d){
+    if((*d)->start < dev->start){
+      if((*d)->end > dev->start)
+        occupied=1;
+      }
+    else
+      if((*d)->start < dev->end)
+        occupied=1;
+    d=&((*d)->next);
+    }
 
-  map->next = *m;
-  *m = map;
+  if(occupied)
+    printf("Address range not free.\n");
 
-  ++(dev->n_mapped);
+  if(occupied || dev->init(dev)){
+    free(name);
+    free(dev);
+    return;
+    }
+
+  d=&bus_mapped_devices;
+  while(*d && (*d)->start<start)d=&((*d)->next);
+
+  dev->next = *d;
+  *d = dev;
+
+  ++(devtype->n_mapped);
   }
 
-static busmap *find_map(paddr addr){
-  busmap *map=bus_maps;
+device *dev_find_mapped(char *name){
+  device *dev=bus_mapped_devices;
 
-  while(map && map->start <= addr){
-    if(map->end >= addr)return map;
-    map=map->next;
+  while(dev){
+    if(!strcmp(dev->devname, name))return dev;
+    dev=dev->next;
+    }
+
+  return 0;
+  }
+
+static device *addr_to_dev(paddr addr){
+  device *dev=bus_mapped_devices;
+
+  while(dev && dev->start <= addr){
+    if(dev->end >= addr)return dev;
+    dev=dev->next;
     }
 
   return 0;
   }
 
 ubyte bus_readb(paddr addr){
-  busmap *map=find_map(addr);
-  if(!map)signal_bus_error("byte read", addr);
-  device *dev=map->dev;
-  return dev->readb(dev, addr-map->start);
+  device *dev=addr_to_dev(addr);
+  if(!dev)signal_bus_error("byte read", addr);
+  return dev->readb(dev, addr-dev->start);
   }
 
 uword bus_readw(paddr addr){
   addr &= ~1;
-  busmap *map=find_map(addr);
-  if(!map)signal_bus_error("word read", addr);
-  device *dev=map->dev;
-  return dev->readw(dev, addr-map->start);
+  device *dev=addr_to_dev(addr);
+  if(!dev)signal_bus_error("word read", addr);
+  return dev->readw(dev, addr-dev->start);
   }
 
 void bus_writeb(paddr addr, ubyte val){
-  busmap *map=find_map(addr);
-  if(!map)signal_bus_error("byte write", addr);
-  device *dev=map->dev;
-  dev->writeb(dev, addr-map->start, val);
+  device *dev=addr_to_dev(addr);
+  if(!dev)signal_bus_error("byte write", addr);
+  dev->writeb(dev, addr-dev->start, val);
   }
 
 void bus_writew(paddr addr, uword val){
   addr &= ~1;
-  busmap *map=find_map(addr);
-  if(!map)signal_bus_error("word write", addr);
-  device *dev=map->dev;
-  dev->writew(dev, addr-map->start, val);
+  device *dev=addr_to_dev(addr);
+  if(!dev)signal_bus_error("word write", addr);
+  dev->writew(dev, addr-dev->start, val);
   }

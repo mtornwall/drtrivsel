@@ -1,12 +1,12 @@
 
-devices= mem uart
-device_objs= $(addprefix dev_,$(addsuffix .o,$(devices)))
+devtypes= mem uart
+device_objs= $(addprefix dev_,$(addsuffix .o,$(devtypes)))
 
 commands= help map
 command_objs= $(addprefix cmd_,$(addsuffix .o,$(commands)))
 
-fet_objs= fet.o bus.o cpu_instr.o cpu_state.o \
-          devices.o $(device_objs) \
+fet_objs= fet.o bus.o cpu_instr.o cpu_state.o cmdlex.o \
+          devtypes.o $(device_objs) \
           commands.o $(command_objs)
 
 CC=gcc
@@ -20,21 +20,21 @@ $(fet_objs): fet.h
 
 $(command_objs) fet.o: commands.h
 
-#devices.o: devices.c
-#	$(CC) $(CFLAGS) -c -o devices.o devices.c
+#devtypes.o: devtypes.c
+#	$(CC) $(CFLAGS) -c -o devtypes.o devtypes.c
 
-.PHONY: devices.c
-devices.c:
-	@echo Generating devices.c with: $(devices)
-	@printf '#include"fet.h"\n\n' > devices.c
-	@for dev in $(devices); do \
+.PHONY: devtypes.c
+devtypes.c:
+	@echo Generating devtypes.c with: $(devtypes)
+	@printf '#include"fet.h"\n\n' > devtypes.c
+	@for dev in $(devtypes); do \
 	   printf 'extern device dev_%s;\n' $$dev ; \
-	 done >> devices.c
-	@printf '\ndevice *devices[]={\n' >> devices.c
-	@for dev in $(devices); do \
+	 done >> devtypes.c
+	@printf '\ndevice *devtypes[]={\n' >> devtypes.c
+	@for dev in $(devtypes); do \
 	   printf '  &dev_%s,\n' $$dev ; \
-	 done >> devices.c
-	@printf '  };\nint ndevices=$(words $(devices));\n' >> devices.c
+	 done >> devtypes.c
+	@printf '  };\nint ndevtypes=$(words $(devtypes));\n' >> devtypes.c
 
 .PHONY: commands.c
 commands.c:

@@ -15,10 +15,13 @@ typedef uint32_t paddr;
 
 typedef struct device device;
 struct device{
-  char *name;
+  char *typename, *devname;
   int n_mapped;
-  paddr map_length;
-  device *(*init)(char *name, paddr start, char **argv);
+  char **argv_temp;
+  paddr start, end;
+  device *next;
+  device *(*create)(char *name, paddr start, char **argv);
+  int (*init)(device *dev);
   void (*writeb)(device *dev, paddr, ubyte);
   void (*writew)(device *dev, paddr, uword);
   ubyte (*readb)(device *dev, paddr);
@@ -27,19 +30,13 @@ struct device{
   int (*lookup_reg)(paddr *addr, device *dev, char *name);
   };
 
-extern device *devices[];
-int ndevices;
+extern device *devtypes[];
+int ndevtypes;
 
-device *find_dev(char *name);
+device *dev_find_devtype(char *name);
+device *dev_find_mapped(char *name);
 
-typedef struct busmap{
-  paddr start, end;
-  struct busmap *next;
-  struct device *dev;
-  char *name;
-  }busmap;
-
-busmap *bus_maps;
+device *bus_mapped_devices;
 
 void signal_bus_error(char *what, paddr where);
 
@@ -47,6 +44,8 @@ typedef struct cpu_flags{
   unsigned c:1, z:1, n:1, v:1;
   } cpu_flags;
 
+
+void bus_devinit_usage(char *dev, char *usage);
 
 void bus_mapdev(device *device, paddr start, char *name, char **argv);
 ubyte bus_readb(paddr addr);
@@ -70,5 +69,7 @@ void cpu_write_flag_uword(uword f);
 void cpu_init();
 void cpu_step();
 
+int cmdlex(char ***to, char *str);
+void free_toklist(char **toklist, int len);
 
 #endif

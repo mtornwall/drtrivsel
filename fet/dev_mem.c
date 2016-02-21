@@ -7,49 +7,61 @@
 
 typedef struct{
   device dev;
-  paddr base;
-  uword mem[];
+  uword *mem;
   }mem_block;
 
 device dev_mem;  // Defined at the bottom of this file
 
 
 static void usage(){
-  fprintf(stderr, "Usage:  mem <length>\n\n");
+  bus_devinit_usage("mem", "<size>");
   }
 
-static struct device *init(char *name, paddr start, char **argv){
+#define USAGE_ERROR() {usage(); return 0;}
+
+static device *create(char *name, paddr start, char **argv){
+  mem_block *mb;
   char *endptr;
   paddr len;
-  mem_block *mb;
 
-  if(!argv[0] || !argv[0][0]){
-    fprintf(stderr, "Missing length parameter.\n");
-    usage();
-    return 0;
-    }
+  if(!argv || !*argv || !**argv)
+    USAGE_ERROR()
 
-  len=strtoul(argv[0], &endptr, 0);  // Bytes
-  len=(len+1)/2;                     // Words
+  len=strtoul(*argv, &endptr, 0);  // Bytes
 
   if(*endptr){
-    fprintf(stderr, "Malformed length parameter.\n");
-    usage();
-    return 0;
+    if(!strcmp(endptr, "k") || !strcmp(endptr, "K"))len*=1024;
+    else if(!strcmp(endptr, "M"))len*=1024*1024;
+    else USAGE_ERROR()
     }
 
-  mb=malloc(sizeof(*mb)+len*sizeof(mb->mem[0]));
-  mb->dev=dev_mem;
-  mb->dev.name=strdup(name);
-  mb->dev.map_length=len;
-  mb->base=start;
+  ++argv;
 
+  len=(len+1)/2;                     // Words
+
+  mb=malloc(sizeof(*mb));
+  mb->dev=dev_mem;
+  mb->dev.argv_temp=argv;
+  mb->dev.start=start;
+  mb->dev.end=start+len*2;
+  mb->dev.n_mapped=-1;       // So we can tell that this device struct is a
+                             // mapped device and not the devtype struct
   return (device *)mb;
+  }
+
+static int init(device *dev){
+  mem_block *mb=(mem_block *)dev;
+
+  if(*(mb->dev.argv_temp))USAGE_ERROR()
+
+  mb->mem=malloc((mb->dev.end - mb->dev.start)*sizeof(mb->mem[0]));
+
+  return 0;
   }
 
 static void writeb(device *_dev, paddr _addr, ubyte d){
   mem_block *dev=(mem_block *)_dev;
-  paddr addr=_addr-dev->base;
+  paddr addr=_addr-_dev->start;
 
   if(addr&1){
     dev->mem[addr/2]&=0xFF00;
@@ -63,14 +75,14 @@ static void writeb(device *_dev, paddr _addr, ubyte d){
 
 static void writew(device *_dev, paddr _addr, uword d){
   mem_block *dev=(mem_block *)_dev;
-  paddr addr=_addr-dev->base;
+  paddr addr=_addr-_dev->start;
 
   dev->mem[addr/2]=d;
   }
 
 static ubyte readb(device *_dev, paddr _addr){
   mem_block *dev=(mem_block *)_dev;
-  paddr addr=_addr-dev->base;
+  paddr addr=_addr-_dev->start;
 
   if(addr&1)
     return dev->mem[addr/2]&0xFF;
@@ -80,7 +92,7 @@ static ubyte readb(device *_dev, paddr _addr){
 
 static uword readw(device *_dev, paddr _addr){
   mem_block *dev=(mem_block *)_dev;
-  paddr addr=_addr-dev->base;
+  paddr addr=_addr-_dev->start;
 
   return dev->mem[addr/2];
   }
@@ -98,6 +110,7 @@ static int lookup_reg(paddr *addr, device *_dev, char *name){
 
 
 device dev_mem={
-  "mem", 0, 0,
-  init, writeb, writew, readb, readw, console_command, lookup_reg
+  "mem",             // typename
+  0, 0, 0, 0, 0, 0,  // devname, n_mapped, argv_temp, start, end, next
+  create, init, writeb, writew, readb, readw, console_command, lookup_reg
   };
