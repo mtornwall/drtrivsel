@@ -52,7 +52,10 @@ static device *create(char *name, paddr start, char **argv){
 static int init(device *dev){
   mem_block *mb=(mem_block *)dev;
 
-  if(*(mb->dev.argv_temp))USAGE_ERROR()
+  if(*(mb->dev.argv_temp)){
+    usage();
+    return -1;
+    }
 
   mb->mem=malloc((mb->dev.end - mb->dev.start)*sizeof(mb->mem[0]));
 
