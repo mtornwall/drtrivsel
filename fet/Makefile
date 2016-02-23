@@ -2,10 +2,10 @@
 devtypes= mem uart
 device_objs= $(addprefix dev_,$(addsuffix .o,$(devtypes)))
 
-commands= help map
+commands= help map lsdev cpu
 command_objs= $(addprefix cmd_,$(addsuffix .o,$(commands)))
 
-fet_objs= fet.o bus.o cpu_instr.o cpu_state.o cmdlex.o \
+fet_objs= fet.o bus.o cpu_instr.o cpu_state.o cmdlex.o util.o \
           devtypes.o $(device_objs) \
           commands.o $(command_objs)
 

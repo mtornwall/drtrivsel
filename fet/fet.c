@@ -36,11 +36,6 @@ int main(int argc, char *argv[]){
   command *cmd;
   char **toklist;
 
-printf("%d device types: \n", ndevtypes);
-for(i=0; i<ndevtypes; i++)printf("%s\n", devtypes[i]->typename);
-printf("%d commands: \n", ncommands);
-for(i=0; i<ncommands; i++)printf("%s\n", commands[i].name);
-
   while((line=readline("fet> "))){
     if(line && *line){
       toklist_len=cmdlex(&toklist, line);

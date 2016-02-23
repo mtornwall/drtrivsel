@@ -2,6 +2,7 @@
 #define FET_H
 
 #include<stdint.h>
+#include<stdio.h>
 
 
 typedef uint32_t udword;
@@ -71,5 +72,7 @@ void cpu_step();
 
 int cmdlex(char ***to, char *str);
 void free_toklist(char **toklist, int len);
+
+FILE *columns(void);
 
 #endif

@@ -5,11 +5,10 @@
 #include"commands.h"
 
 
-int cmd_help(char **argv){
-  printf("Commands:\n");
+int cmd_lsdev(char **argv){
   FILE *c=columns();
-  for(int i=0; i<ncommands; i++)
-    fprintf(c, "  %s\n", commands[i].name);
+  for(int i=0; i<ndevtypes; i++)
+    fprintf(c, "%s\n", devtypes[i]->typename);
   pclose(c);
 
   return 0;
