@@ -35,7 +35,9 @@ vaddr cpu_read_pc(){
   }
 
 vaddr cpu_read_inc_pc(){
-  return pc++;
+  vaddr _pc=pc;
+  pc+=2;
+  return _pc;
   }
 
 cpu_flags cpu_read_flags(){

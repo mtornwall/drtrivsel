@@ -8,9 +8,34 @@
 #include"fet.h"
 #include"commands.h"
 
+static volatile int running;
+static int show_bus_errors=1;
+
+#define BERROFF() show_bus_errors=0;
+#define BERRON() show_bus_errors=1;
 
 void signal_bus_error(char *what, paddr where){
-  fprintf(stderr, "*** Bus error: attempted %s @ %06X\n", what, where);
+  if(show_bus_errors)
+    fprintf(stderr, "*** Bus error: attempted %s @ %06X\n", what, where);
+  running=0;
+  }
+
+int cmd_step(char **argv){
+  cpu_step();
+
+  BERROFF()
+  printf("next: %04X: %04X\n", cpu_read_pc(), bus_readw(cpu_read_pc()));
+  BERRON()
+
+  return 0;
+  }
+
+int cmd_run(char **argv){
+  running=1;
+  while(running)cpu_step();
+  printf("Stopped.\n");
+
+  return 0;
   }
 
 device *dev_find_devtype(char *name){

@@ -75,26 +75,38 @@ static device *addr_to_dev(paddr addr){
 
 ubyte bus_readb(paddr addr){
   device *dev=addr_to_dev(addr);
-  if(!dev)signal_bus_error("byte read", addr);
+  if(!dev){
+    signal_bus_error("byte read", addr);
+    return 0;
+    }
   return dev->readb(dev, addr-dev->start);
   }
 
 uword bus_readw(paddr addr){
   addr &= ~1;
   device *dev=addr_to_dev(addr);
-  if(!dev)signal_bus_error("word read", addr);
+  if(!dev){
+    signal_bus_error("word read", addr);
+    return 0;
+    }
   return dev->readw(dev, addr-dev->start);
   }
 
 void bus_writeb(paddr addr, ubyte val){
   device *dev=addr_to_dev(addr);
-  if(!dev)signal_bus_error("byte write", addr);
+  if(!dev){
+    signal_bus_error("byte write", addr);
+    return;
+    }
   dev->writeb(dev, addr-dev->start, val);
   }
 
 void bus_writew(paddr addr, uword val){
   addr &= ~1;
   device *dev=addr_to_dev(addr);
-  if(!dev)signal_bus_error("word write", addr);
+  if(!dev){
+    signal_bus_error("word write", addr);
+    return;
+    }
   dev->writew(dev, addr-dev->start, val);
   }
