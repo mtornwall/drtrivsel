@@ -36,6 +36,8 @@ int main(int argc, char *argv[]){
   command *cmd;
   char **toklist;
 
+  cpu_init();
+
   while((line=readline("fet> "))){
     if(line && *line){
       toklist_len=cmdlex(&toklist, line);
