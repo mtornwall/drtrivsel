@@ -1,6 +1,7 @@
 #include<stdlib.h>
 #include<string.h>
 #include<stdio.h>
+#include<stdarg.h>
 #include"fet.h"
 #include"commands.h"
 
@@ -8,8 +9,22 @@
 #define USAGE_ERROR() {usage(); return 1;}
 
 
-void bus_devinit_usage(char *dev, char *usage){
-  printf("Usage for device %s:  %s( %s )\n", dev, dev, usage);
+void devinit_usage(char *dev, ...){
+  char *usage;
+  va_list ap;
+
+  printf("Usage for device %s:", dev);
+
+  va_start(ap, dev);
+  if(va_arg(ap, char *) && va_arg(ap, char *))putchar('\n');
+  va_end(ap);
+
+  va_start(ap, dev);
+
+  while((usage=va_arg(ap, char *)))
+    printf("  %s( %s )\n", dev, usage);
+
+  va_end(ap);
   }
 
 static void usage(){
@@ -19,9 +34,10 @@ static void usage(){
 int cmd_map(char **argv){
   device *devtype;
   device *dev;
-  paddr addr;
+  paddr addr=0xFFFFFFFFL;
   char *endptr;
   char *name=0, **devoptions=0;
+  int parcount;
 
   ++argv;
 
@@ -35,41 +51,48 @@ int cmd_map(char **argv){
     return 0;
     }
   devtype=dev_find_devtype(*argv);
-
   ++argv;
-  if(!*argv)USAGE_ERROR()
 
+  if(!*argv)USAGE_ERROR()
   if(!strcmp(*argv, "(")){
     devoptions=argv+1;
+    parcount=1;
     do{
       ++argv;
       if(!*argv)USAGE_ERROR()
-      }while(strcmp(argv[-1], ")"));
-    free(argv[-1]);                   // Null terminate device option list
-    argv[-1]=0;                       // for device init
+      if(!strcmp(*argv, ")"))
+        --parcount;
+      else if(!strcmp(*argv, "("))
+        ++parcount;
+      }while(parcount);
+    free(*argv);                     // Null terminate device option list
+    *argv=0;                         // for device init
     }
-
-  if(!strcmp(*argv, "as")){
-    argv++;
-    if(!*argv)USAGE_ERROR()
-    name=*argv++;
-    if(!*argv)USAGE_ERROR()
-    }
-
-  if(strcmp(*argv, "at"))USAGE_ERROR()
-
   ++argv;
-  if(!*argv)USAGE_ERROR()
 
-  addr=strtoul(*argv, &endptr, 0);
-  if(*endptr)USAGE_ERROR()
-  
+  while(*argv){
+    if(!strcmp(*argv, "as")){
+      ++argv;
+      if(!*argv)USAGE_ERROR()
+      name=*argv++;
+      }
+    else if(!strcmp(*argv, "at")){
+      ++argv;
+      if(!*argv)USAGE_ERROR()
+      addr=strtoul(*argv, &endptr, 0);
+      if(*endptr)USAGE_ERROR()
+      ++argv;
+      }
+    else USAGE_ERROR()
+    }
+
+  if(addr==0xFFFFFFFFL)USAGE_ERROR()
+
   if(!devtype){
     printf("No such device type.\n");
     return 1;
     }
 
-  ++argv;
   bus_mapdev(devtype, addr, name, devoptions);
 
   return 0;

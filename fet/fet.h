@@ -46,7 +46,7 @@ typedef struct cpu_flags{
   } cpu_flags;
 
 
-void bus_devinit_usage(char *dev, char *usage);
+void devinit_usage(char *dev, ...);
 
 void bus_mapdev(device *device, paddr start, char *name, char **argv);
 ubyte bus_readb(paddr addr);
@@ -72,6 +72,8 @@ void cpu_step();
 
 int cmdlex(char ***to, char *str);
 void free_toklist(char **toklist, int len);
+
+int disassemble(char *to, paddr addr);
 
 FILE *columns(void);
 

@@ -45,19 +45,19 @@ cpu_flags cpu_read_flags(){
   }
 
 void cpu_write_cflag(int f){
-  flags.c=f;
+  flags.c=!!f;
   }
 
 void cpu_write_zflag(int f){
-  flags.z=f;
+  flags.z=!!f;
   }
 
 void cpu_write_nflag(int f){
-  flags.n=f;
+  flags.n=!!f;
   }
 
 void cpu_write_vflag(int f){
-  flags.n=f;
+  flags.n=!!f;
   }
 
 uword cpu_read_flag_uword(){

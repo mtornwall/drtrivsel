@@ -50,7 +50,7 @@ devtypes.c:
 commands.c:
 	@echo Generating commands.c with: $(commands)
 	@printf '#include"commands.h"\n\n' > commands.c
-	( $(foreach cmd,$(commands),\
+	@( $(foreach cmd,$(commands),\
 	     printf 'int cmd_%s(char **);\n' $(lastword $(subst :, ,$(cmd))); \
 	   ) ) >> commands.c
 	@printf '\ncommand commands[]={\n' >> commands.c

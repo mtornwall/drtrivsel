@@ -1,0 +1,110 @@
+// ALU-op           0 ooooo aaaa l i rrrr
+// Arithmetic       0 0scdf aaaa l i rrrr
+
+      scdf  operation       b    assembly
+      0000  [ cf add    ]  #0    acf %r
+      0000  [ cf add    ]   y    adc %r, y
+      0001  [ cf sub    ]  #0    sbf %r
+      0001  [ cf sub    ]   y    sbb %r, y
+      0010  [ cf add dis]  #0    acfd %r
+      0010  [ cf add dis]   y    adcd %r, y
+      0011  [ cf sub dis]  #0    cmpbf %r
+      0011  [ cf sub dis]   y    sbcd %r, y
+      0100  [~cf add    ]  #0    abf  %r
+      0100  [~cf add    ]   y    adb  %r, y
+      0101  [~cf sub    ]  #0    scf  %r
+      0101  [~cf sub    ]   y    sbc  %r, y
+      0110  [~cf add dis]  #0    abfd %r
+      0110  [~cf add dis]   y    adbd %r, y
+      0111  [~cf sub dis]  #0    cmpcf %r
+      0111  [~cf sub dis]   y    sbcd %r, y
+      1000  [ c0 add    ]  #0    add0 %r
+      1000  [ c0 add    ]   y    add %r, y
+      1001  [ c0 sub    ]  #0    dec %r
+      1001  [ c0 sub    ]   y    subdec %r, y
+      1010  [ c0 add dis]  #0    clctst %r
+      1010  [ c0 add dis]   y    addd %r, y
+      1011  [ c0 sub dis]  #0    cmpp1 %r
+      1011  [ c0 sub dis]   y    subdecd %r, y
+      1100  [ c1 add    ]  #0    inc %r
+      1100  [ c1 add    ]   y    addinc %r, y
+      1101  [ c1 sub    ]  #0    stctst %r
+      1101  [ c1 sub    ]   y    sub %r, y
+      1110  [ c1 add dis]  #0    cmpm1 %r
+      1110  [ c1 add dis]   y    addincd %r, y
+      1111  [ c1 sub dis]  #0    cmp0 %r
+      1111  [ c1 sub dis]   y    cmp %r, y
+
+// Logic            0 1oooo aaaa l i rrrr
+
+      0x20: ~a       rnot
+      0x21: 
+      0x22: ~a | ~b  anand
+      0x23: 
+      0x24: ~a &  b  rmcl
+      0x25: 
+      0x26:  0       clr
+      0x27: 
+      0x28: ~(a & b) nand
+      0x29: 
+      0x2A:      ~b  not
+      0x2B: 
+      0x2C:  a ^  b  xor
+      0x2D: 
+      0x2E:  a & ~b  mcl
+      0x2F: 
+      0x30: ~a |  b  rmst
+      0x31: 
+      0x32: ~a ^ ~b  axor
+      0x33: 
+      0x34:       b  mov
+      0x35: 
+      0x36:  a &  b  and
+      0x37: 
+      0x38: ~0       set
+      0x39: 
+      0x3A:  a | ~b  mst
+      0x3B: 
+      0x3C:  a |  b  or
+      0x3D: 
+      0x3E:  a       tst
+      0x3F: 
+
+// Relative jumps   10 cccc dddddddddd
+
+       0: CF                //  jlu/jc
+       1: ZF                //  je/jz
+       2: NF                //  jn/js
+       3: VF                //  jv
+       4: NF==VF            //  jges
+       5: CF||ZF            //  jleu
+       6: ZF||!(NF==VF)     //  jles
+       7: 0                 //  doesn't jump
+       8: !CF               //  jgeu/jnc
+       9: !ZF               //  jne/jnz
+      10: !NF               //  jp/jns
+      11: !VF               //  jnv
+      12: !(NF==VF)         //  jls
+      13: !(CF||ZF)         //  jgu
+      14: !(ZF||!(NF==VF))  //  jgs
+      15: 1                 //  always jumps
+
+// Misc             11 oooo ??????????
+
+    11 0000 rrrr yyyyyy    jump/call/ret    {om r: r <- pc}; pc <- y
+
+    11 0001 rrrr yyyyyy    store word       r -> y
+
+    11 0010 rrrr yyyyyy    load byte zero-extended
+    11 0011 rrrr yyyyyy    load byte sign-extended
+    11 0100 rrrr yyyyyy    store byte
+
+    11 0101 rrrr d t xxxx  logical shift, d väljer vänster/höger
+                           t väljer typ R/K på "x"-operanden
+
+    11 0110 rrrr d t xxxx  arithmetic shift
+
+    11 0111 rrrr yyyyyy    push   (r--) <- y
+    11 1000 rrrr yyyyyy    pop    (++r) -> y
+
+    11 1001 rrrr yyyyyy    atomär exchange 

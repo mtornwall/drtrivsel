@@ -14,7 +14,7 @@ device dev_mem;  // Defined at the bottom of this file
 
 
 static void usage(){
-  bus_devinit_usage("mem", "<size>");
+  devinit_usage("mem", "<size>", 0);
   }
 
 #define USAGE_ERROR() {usage(); return 0;}
@@ -59,6 +59,8 @@ static int init(device *dev){
 
   mb->mem=malloc((mb->dev.end - mb->dev.start)*sizeof(mb->mem[0]));
 
+for(int i=0; i<(mb->dev.end - mb->dev.start); i++)mb->mem[i]=rand()&0x7FEF;
+
   return 0;
   }
 
@@ -101,12 +103,12 @@ static uword readw(device *_dev, paddr _addr){
   }
 
 static void console_command(device *_dev, char **firstline){
-  mem_block *dev=(mem_block *)_dev;
+//  mem_block *dev=(mem_block *)_dev;
 
   }
 
 static int lookup_reg(paddr *addr, device *_dev, char *name){
-  mem_block *dev=(mem_block *)_dev;
+// mem_block *dev=(mem_block *)_dev;
 
   return 0;
   }
