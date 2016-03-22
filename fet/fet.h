@@ -73,6 +73,7 @@ void cpu_step();
 int cmdlex(char ***to, char *str);
 void free_toklist(char **toklist, int len);
 
+extern char *regname[16];
 int disassemble(char *to, paddr addr);
 
 FILE *columns(void);

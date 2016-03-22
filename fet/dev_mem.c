@@ -4,6 +4,8 @@
 #include<string.h>
 #include"fet.h"
 
+#include<time.h>
+
 
 typedef struct{
   device dev;
@@ -59,7 +61,12 @@ static int init(device *dev){
 
   mb->mem=malloc((mb->dev.end - mb->dev.start)*sizeof(mb->mem[0]));
 
-for(int i=0; i<(mb->dev.end - mb->dev.start); i++)mb->mem[i]=rand()&0x7FEF;
+srand(time(0));
+for(unsigned i=0; i<(mb->dev.end - mb->dev.start); i++){
+  unsigned r;
+  r=rand();
+  mb->mem[i]=((i&3)<<14)|(((i>>2)&15)<<10)|(r&1023);
+  }
 
   return 0;
   }

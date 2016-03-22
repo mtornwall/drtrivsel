@@ -33,3 +33,7 @@
 
 # Emacs-auto-backup
 *~
+
+# Emacs desktop files
+.emacs.desktop
+.emacs.desktop.lock

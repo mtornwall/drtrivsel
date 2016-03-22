@@ -11,7 +11,7 @@ devtypes:= $(device_files:dev_%.c=%)
 # alias1:alias2:canonical. If the canonical name happens to also be
 # non-obvious, add a colon to the end to include the canonical name too.
 
-nonobvious_commands:= cpu s:step: g:go:run:
+nonobvious_commands:= cpu s:step: g:go:run: dis
 
 
 command_files:= $(wildcard cmd_*.c)
@@ -51,7 +51,8 @@ commands.c:
 	@echo Generating commands.c with: $(commands)
 	@printf '#include"commands.h"\n\n' > commands.c
 	@( $(foreach cmd,$(commands),\
-	     printf 'int cmd_%s(char **);\n' $(lastword $(subst :, ,$(cmd))); \
+	     printf 'int cmd_%s(int, char **);\n' \
+	            $(lastword $(subst :, ,$(cmd))); \
 	   ) ) >> commands.c
 	@printf '\ncommand commands[]={\n' >> commands.c
 	@( $(foreach cmd,$(commands),\

@@ -5,7 +5,7 @@
 #include"commands.h"
 
 
-int cmd_help(char **argv){
+int cmd_help(int again, char **argv){
   printf("Commands:\n");
   FILE *c=columns();
   for(int i=0; i<ncommands; i++)

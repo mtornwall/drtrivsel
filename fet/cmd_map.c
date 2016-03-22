@@ -31,7 +31,7 @@ static void usage(){
   printf("Usage:  map <device_type(options)> [as <name>] at <base_addr>\n");
   }
 
-int cmd_map(char **argv){
+int cmd_map(int again, char **argv){
   device *devtype;
   device *dev;
   paddr addr=0xFFFFFFFFL;

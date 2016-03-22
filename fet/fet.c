@@ -25,7 +25,7 @@ void signal_bus_error(char *what, paddr where){
   running=0;
   }
 
-int cmd_step(char **argv){
+int cmd_step(int again, char **argv){
   static char dis[30];
   int len;
 
@@ -42,19 +42,19 @@ int cmd_step(char **argv){
   return 0;
   }
 
-int cmd_run(char **argv){
+int cmd_run(int again, char **argv){
   running=1;
   while(running)cpu_step();
   printf("Stopped.\n");
   return 0;
   }
 
-int cmd_x(char **argv){
+int cmd_x(int again, char **argv){
   // ***
   return 1;
   }
 
-int cmd_d(char **argv){
+int cmd_d(int again, char **argv){
   // ***
   return 1;
   }
@@ -82,6 +82,8 @@ int main(int argc, char *argv[]){
   command *cmd;
   char **toklist;
   struct sigaction sa;
+  HIST_ENTRY *last;
+  int again;
 
   sa.sa_handler=sigint;
   sigemptyset(&sa.sa_mask);
@@ -91,10 +93,21 @@ int main(int argc, char *argv[]){
   cpu_init();
 
   while((line=readline("fet> "))){
-    if(line && *line){
+    again=0;
+    if(line){
+
+      if(!*line){
+        last=history_get(history_length);
+        if(last){
+          free(line);
+          line=strdup(last->line);
+          again=1;
+          }
+        }
+
       toklist_len=cmdlex(&toklist, line);
 
-      if(toklist_len)
+      if(toklist_len && !again)
         add_history(line);
       free(line);
 
@@ -104,7 +117,7 @@ int main(int argc, char *argv[]){
         continue;
 
       if((cmd=find_cmd(toklist[0])))
-        cmd->function(toklist);
+        cmd->function(again, toklist);
       else if(dev_find_mapped(toklist[0]))
         printf("mapped device\n");
       else if(dev_find_devtype(toklist[0]))

@@ -78,12 +78,11 @@ void cpu_write_flag_uword(uword f){
   flags.v=!!(f&V_FLAG);
   }
 
-int cmd_cpu(char **argv){
+int cmd_cpu(int again, char **argv){
   if(!argv[1]){
     for(int j=0; j<4; j++){
       for(int i=0; i<16; i+=4){
-        if((i+j)<10)putchar(' ');
-        printf("  r%d: %04X", i+j, r[i+j]);
+        printf("  %3s: %04X", regname[i+j], r[i+j]);
         }
       if(j==0)printf("     pc: %04X", pc);
       if(j==1)printf("  flags: %c%c%c%c", flags.c?'C':'-', flags.z?'Z':'-',

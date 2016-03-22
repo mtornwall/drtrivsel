@@ -3,7 +3,7 @@
 
 typedef struct{
   char *name;
-  int (*function)(char **);
+  int (*function)(int, char **);
   }command;
 
 extern command commands[];

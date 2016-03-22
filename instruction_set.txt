@@ -87,24 +87,36 @@
       12: !(NF==VF)         //  jls
       13: !(CF||ZF)         //  jgu
       14: !(ZF||!(NF==VF))  //  jgs
-      15: 1                 //  always jumps
+      15: 1                 //  j
 
 // Misc             11 oooo ??????????
 
-    11 0000 rrrr yyyyyy    jump/call/ret    {om r: r <- pc}; pc <- y
+    11 0000 aaaa l i rrrr    jmp/here/call/ret    a <- pc; pc <- y
+                             jmp:  a=r0
+                             here: a=y
+                             ret:  y=ra
+                             call: else
+    11 0001 aaaa l i rrrr    
+    11 0010 aaaa l i rrrr    lbz                  load byte zero-extended
+    11 0011 aaaa l i rrrr    lbs                  load byte sign-extended
 
-    11 0001 rrrr yyyyyy    store word       r -> y
+    11 0100 aaaa l i rrrr    sw                   store word  a -> y
+    11 0101 aaaa l i rrrr    
+    11 0110 aaaa l i rrrr    sb                   store byte  a -> y
+    11 0111 aaaa l i rrrr    
 
-    11 0010 rrrr yyyyyy    load byte zero-extended
-    11 0011 rrrr yyyyyy    load byte sign-extended
-    11 0100 rrrr yyyyyy    store byte
+    11 1000 aaaa l i rrrr    push                 (a--) <- y
+    11 1001 aaaa l i rrrr    pop                  (++a) -> y
+    11 1010 aaaa l i rrrr    xchg                 atomic exchange 
+    11 1011 aaaa l i rrrr    
 
-    11 0101 rrrr d t xxxx  logical shift, d väljer vänster/höger
-                           t väljer typ R/K på "x"-operanden
+    11 1100 aaaa d t xxxx    logical shift, d selects left/right
+                             t selects type R/K for "x" operand
+                             lsl: d=0
+                             lsr: d=1
+    11 1101 aaaa d t xxxx    arithmetic shift
+                             asl: d=0
+                             asr: d=1
 
-    11 0110 rrrr d t xxxx  arithmetic shift
-
-    11 0111 rrrr yyyyyy    push   (r--) <- y
-    11 1000 rrrr yyyyyy    pop    (++r) -> y
-
-    11 1001 rrrr yyyyyy    atomär exchange 
+    11 1110 
+    11 1111 
