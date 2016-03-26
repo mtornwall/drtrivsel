@@ -3,10 +3,6 @@
 #include<stdio.h>
 #include<stdarg.h>
 #include"fet.h"
-#include"commands.h"
-
-
-#define USAGE_ERROR() {usage(); return 1;}
 
 
 void devinit_usage(char *dev, ...){
@@ -43,7 +39,8 @@ int cmd_map(int again, char **argv){
 
   if(!*argv){  // Display bus map
     for(dev=bus_mapped_devices; dev; dev=dev->next)
-      printf("%06X - %06X  %10s\n", dev->start, dev->end, dev->devname);
+      printf("%06lX - %06lX  %10s\n",
+             (unsigned long)dev->start, (unsigned long)dev->end, dev->devname);
     return 0;
     }
   if(!strcmp(*argv, "help")){
@@ -53,13 +50,13 @@ int cmd_map(int again, char **argv){
   devtype=dev_find_devtype(*argv);
   ++argv;
 
-  if(!*argv)USAGE_ERROR()
+  if(!*argv)USAGE()
   if(!strcmp(*argv, "(")){
     devoptions=argv+1;
     parcount=1;
     do{
       ++argv;
-      if(!*argv)USAGE_ERROR()
+      if(!*argv)USAGE()
       if(!strcmp(*argv, ")"))
         --parcount;
       else if(!strcmp(*argv, "("))
@@ -73,27 +70,25 @@ int cmd_map(int again, char **argv){
   while(*argv){
     if(!strcmp(*argv, "as")){
       ++argv;
-      if(!*argv)USAGE_ERROR()
+      if(!*argv)USAGE()
       name=*argv++;
       }
     else if(!strcmp(*argv, "at")){
       ++argv;
-      if(!*argv)USAGE_ERROR()
+      if(!*argv)USAGE()
       addr=strtoul(*argv, &endptr, 0);
-      if(*endptr)USAGE_ERROR()
+      if(*endptr)USAGE()
       ++argv;
       }
-    else USAGE_ERROR()
+    else USAGE()
     }
 
-  if(addr==0xFFFFFFFFL)USAGE_ERROR()
+  if(addr==0xFFFFFFFFL)USAGE()
 
   if(!devtype){
     printf("No such device type.\n");
     return 1;
     }
 
-  bus_mapdev(devtype, addr, name, devoptions);
-
-  return 0;
+  return bus_mapdev(devtype, addr, name, devoptions);
   }

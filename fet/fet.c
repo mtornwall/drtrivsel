@@ -7,56 +7,53 @@
 #include<readline/history.h>
 #include<signal.h>
 #include"fet.h"
-#include"commands.h"
 
 static volatile int running;
-static int show_bus_errors=1;
-
-#define BERROFF() show_bus_errors=0;
-#define BERRON() show_bus_errors=1;
+static int bus_error;
+static paddr bus_error_addr;
 
 void sigint(int foo){
   running=0;
   }
 
-void signal_bus_error(char *what, paddr where){
-  if(show_bus_errors)
-    fprintf(stderr, "*** Bus error: attempted %s @ %06X\n", what, where);
-  running=0;
+int catch_bus_error(){
+  if(!bus_error)return 0;
+  printf("*** Bus error: attempted %s %s @ %06lX\n",
+         (bus_error&BERR_WORD)?"word":"byte",
+         (bus_error&BERR_READ)?"read":"write",
+         (long)bus_error_addr);
+  bus_error=0;
+  return 1;
+  }
+
+int bus_error_happened(){
+  return bus_error;
+  }
+
+void signal_bus_error(int what, paddr where){
+  if(!bus_error){
+    bus_error=what;
+    bus_error_addr=where;
+    running=0;
+    }
   }
 
 int cmd_step(int again, char **argv){
-  static char dis[30];
-  int len;
-
   cpu_step();
+  if(catch_bus_error())return 1;
 
-  BERROFF()
-  len=disassemble(dis, cpu_read_pc());
-  printf("next: %04X: %04X", cpu_read_pc(), bus_readw(cpu_read_pc()));
-  if(len==2)printf(" %04X", bus_readw(cpu_read_pc()+2));
-  else printf("     ");
-  printf("   %s\n", dis);
-  BERRON()
-
-  return 0;
+  return runcmd("dis -n %d", cpu_read_pc());
   }
 
 int cmd_run(int again, char **argv){
+  int ret=0;
+
   running=1;
   while(running)cpu_step();
+  ret=catch_bus_error();
   printf("Stopped.\n");
-  return 0;
-  }
 
-int cmd_x(int again, char **argv){
-  // ***
-  return 1;
-  }
-
-int cmd_d(int again, char **argv){
-  // ***
-  return 1;
+  return ret;
   }
 
 device *dev_find_devtype(char *name){
@@ -78,7 +75,7 @@ command *find_cmd(char *name){
 
 int main(int argc, char *argv[]){
   char *line;
-  int i, toklist_len;
+  int toklist_len;
   command *cmd;
   char **toklist;
   struct sigaction sa;

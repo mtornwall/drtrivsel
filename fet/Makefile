@@ -8,17 +8,18 @@ devtypes:= $(device_files:dev_%.c=%)
 # the presence of cmd_*.c files. Add any command names here which are
 # implemented in other files. It is also possible to include aliases,
 # by prefixing them to the canonical name separated by colons, as
-# alias1:alias2:canonical. If the canonical name happens to also be
-# non-obvious, add a colon to the end to include the canonical name too.
+# alias1:alias2:canonical.
 
-nonobvious_commands:= cpu s:step: g:go:run: dis
+nonobvious_commands:= s:step g:go:run x:examine d:deposit l:load
 
 
 command_files:= $(wildcard cmd_*.c)
 command_objs:= $(command_files:.c=.o)
-commands:= $(command_files:cmd_%.c=%) $(nonobvious_commands)
+commands:= $(filter-out $(subst :, ,$(nonobvious_commands)), \
+                        $(command_files:cmd_%.c=%)) \
+           $(nonobvious_commands)
 
-fet_objs:= fet.o bus.o cpu_instr.o cpu_state.o cmdlex.o util.o \
+fet_objs:= fet.o bus.o cpu_instr.o cpu_state.o cmdlex.o util.o runcmd.o \
            devtypes.o $(device_objs) \
            commands.o $(command_objs)
 
@@ -30,8 +31,6 @@ fet: $(fet_objs)
 	$(CC) $(CFLAGS) -o fet $(fet_objs) $(LIBS)
 
 $(fet_objs): fet.h
-
-$(command_objs) fet.o: commands.h
 
 .PHONY: devtypes.c
 devtypes.c:
@@ -49,7 +48,7 @@ devtypes.c:
 .PHONY: commands.c
 commands.c:
 	@echo Generating commands.c with: $(commands)
-	@printf '#include"commands.h"\n\n' > commands.c
+	@printf '#include"fet.h"\n\n' > commands.c
 	@( $(foreach cmd,$(commands),\
 	     printf 'int cmd_%s(int, char **);\n' \
 	            $(lastword $(subst :, ,$(cmd))); \
@@ -57,9 +56,8 @@ commands.c:
 	@printf '\ncommand commands[]={\n' >> commands.c
 	@( $(foreach cmd,$(commands),\
 	     cmd=$(cmd) ; \
-	     names=$${cmd%:*} ; \
 	     func_name=$(lastword $(subst :, ,$(cmd))); \
-	     for cmd_name in $$(echo $$names | tr : ' '); do \
+	     for cmd_name in $$(echo $$cmd | tr : ' '); do \
 	       printf '  {"%s", cmd_%s},\n' $$cmd_name $$func_name ; \
 	     done ; ) ) >> commands.c
 	@printf '  };\n' >> commands.c

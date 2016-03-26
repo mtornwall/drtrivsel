@@ -76,7 +76,7 @@ int cmdlex(char ***to, char *str){
     free(tok);
     return toklist_len;
     }
-  if(strchr("()=:", c)){
+  if(strchr("()=:,", c)){
     add_tok();
     add_to_tok(c);
     add_tok();

@@ -2,7 +2,6 @@
 
 #include<stdio.h>
 #include"fet.h"
-#include"commands.h"
 
 
 int cmd_lsdev(int again, char **argv){

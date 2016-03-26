@@ -14,12 +14,9 @@ typedef struct{
 
 device dev_mem;  // Defined at the bottom of this file
 
-
 static void usage(){
   devinit_usage("mem", "<size>", 0);
   }
-
-#define USAGE_ERROR() {usage(); return 0;}
 
 static device *create(char *name, paddr start, char **argv){
   mem_block *mb;
@@ -27,14 +24,14 @@ static device *create(char *name, paddr start, char **argv){
   paddr len;
 
   if(!argv || !*argv || !**argv)
-    USAGE_ERROR()
+    USAGE_0()
 
   len=strtoul(*argv, &endptr, 0);  // Bytes
 
-  if(*endptr){
+  if(*endptr || !len){
     if(!strcmp(endptr, "k") || !strcmp(endptr, "K"))len*=1024;
     else if(!strcmp(endptr, "M"))len*=1024*1024;
-    else USAGE_ERROR()
+    else USAGE_0()
     }
 
   ++argv;
@@ -45,7 +42,7 @@ static device *create(char *name, paddr start, char **argv){
   mb->dev=dev_mem;
   mb->dev.argv_temp=argv;
   mb->dev.start=start;
-  mb->dev.end=start+len*2;
+  mb->dev.end=start+len*2-1;
   mb->dev.n_mapped=-1;       // So we can tell that this device struct is a
                              // mapped device and not the devtype struct
   return (device *)mb;
@@ -102,9 +99,8 @@ static ubyte readb(device *_dev, paddr _addr){
     return dev->mem[addr/2]>>8;
   }
 
-static uword readw(device *_dev, paddr _addr){
+static uword readw(device *_dev, paddr addr){
   mem_block *dev=(mem_block *)_dev;
-  paddr addr=_addr-_dev->start;
 
   return dev->mem[addr/2];
   }
@@ -126,3 +122,9 @@ device dev_mem={
   0, 0, 0, 0, 0, 0,  // devname, n_mapped, argv_temp, start, end, next
   create, init, writeb, writew, readb, readw, console_command, lookup_reg
   };
+
+uword *mem_get_block(device *_dev){
+  mem_block *dev=(mem_block *)_dev;
+
+  return dev->mem;
+  }

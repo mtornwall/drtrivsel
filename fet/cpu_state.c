@@ -1,6 +1,7 @@
 #include<assert.h>
+#include<stdlib.h>
+#include<string.h>
 #include"fet.h"
-#include"commands.h"
 
 
 static uword r[16];
@@ -76,20 +77,4 @@ void cpu_write_flag_uword(uword f){
   flags.z=!!(f&Z_FLAG);
   flags.n=!!(f&N_FLAG);
   flags.v=!!(f&V_FLAG);
-  }
-
-int cmd_cpu(int again, char **argv){
-  if(!argv[1]){
-    for(int j=0; j<4; j++){
-      for(int i=0; i<16; i+=4){
-        printf("  %3s: %04X", regname[i+j], r[i+j]);
-        }
-      if(j==0)printf("     pc: %04X", pc);
-      if(j==1)printf("  flags: %c%c%c%c", flags.c?'C':'-', flags.z?'Z':'-',
-                                          flags.n?'N':'-', flags.v?'V':'-');
-      putchar('\n');
-      }
-    }
-
-  return 0;
   }

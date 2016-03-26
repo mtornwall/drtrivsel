@@ -221,7 +221,7 @@ static void writeb(device *_dev, paddr a, ubyte d){
   }
 
 static void writew(device *_dev, paddr a, uword d){
-  uart *dev=(uart *)_dev;
+//  uart *dev=(uart *)_dev;
   }
 
 static ubyte readb(device *_dev, paddr a){
@@ -236,17 +236,17 @@ static ubyte readb(device *_dev, paddr a){
   }
 
 static uword readw(device *_dev, paddr a){
-  uart *dev=(uart *)_dev;
+//  uart *dev=(uart *)_dev;
   return 0;
   }
 
 static void console_command(device *_dev, char **firstline){
-  uart *dev=(uart *)_dev;
+//  uart *dev=(uart *)_dev;
   printf("NO\n");
   }
 
 static int lookup_reg(paddr *addr, device *_dev, char *name){
-  uart *dev=(uart *)_dev;
+//  uart *dev=(uart *)_dev;
   if(!strcmp("data", name)){*addr=0; return 0;}
   return 1;
   }

@@ -6,7 +6,7 @@
 #include"fet.h"
 
 
-void bus_mapdev(device *devtype, paddr start, char *name, char **argv){
+int bus_mapdev(device *devtype, paddr start, char *name, char **argv){
   device **d, *dev;
   int occupied=0;
 
@@ -16,7 +16,7 @@ void bus_mapdev(device *devtype, paddr start, char *name, char **argv){
   dev=devtype->create(name, start, argv);
   if(!dev){
     free(name);
-    return;
+    return 1;
     }
 
   dev->devname=name;
@@ -39,7 +39,7 @@ void bus_mapdev(device *devtype, paddr start, char *name, char **argv){
   if(occupied || dev->init(dev)){
     free(name);
     free(dev);
-    return;
+    return 1;
     }
 
   d=&bus_mapped_devices;
@@ -49,6 +49,8 @@ void bus_mapdev(device *devtype, paddr start, char *name, char **argv){
   *d = dev;
 
   ++(devtype->n_mapped);
+
+  return 0;
   }
 
 device *dev_find_mapped(char *name){
@@ -62,7 +64,7 @@ device *dev_find_mapped(char *name){
   return 0;
   }
 
-static device *addr_to_dev(paddr addr){
+device *addr_to_dev(paddr addr){
   device *dev=bus_mapped_devices;
 
   while(dev && dev->start <= addr){
@@ -76,7 +78,7 @@ static device *addr_to_dev(paddr addr){
 ubyte bus_readb(paddr addr){
   device *dev=addr_to_dev(addr);
   if(!dev){
-    signal_bus_error("byte read", addr);
+    signal_bus_error(BERR_RB, addr);
     return 0;
     }
   return dev->readb(dev, addr-dev->start);
@@ -86,7 +88,7 @@ uword bus_readw(paddr addr){
   addr &= ~1;
   device *dev=addr_to_dev(addr);
   if(!dev){
-    signal_bus_error("word read", addr);
+    signal_bus_error(BERR_RW, addr);
     return 0;
     }
   return dev->readw(dev, addr-dev->start);
@@ -95,7 +97,7 @@ uword bus_readw(paddr addr){
 void bus_writeb(paddr addr, ubyte val){
   device *dev=addr_to_dev(addr);
   if(!dev){
-    signal_bus_error("byte write", addr);
+    signal_bus_error(BERR_WB, addr);
     return;
     }
   dev->writeb(dev, addr-dev->start, val);
@@ -105,7 +107,7 @@ void bus_writew(paddr addr, uword val){
   addr &= ~1;
   device *dev=addr_to_dev(addr);
   if(!dev){
-    signal_bus_error("word write", addr);
+    signal_bus_error(BERR_WW, addr);
     return;
     }
   dev->writew(dev, addr-dev->start, val);
