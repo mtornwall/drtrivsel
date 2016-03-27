@@ -20,6 +20,9 @@
 #define SHD_FIELD(instr) ((instr)&0x0020)
 #define T_FIELD(instr) ((instr)&0x0010)
 #define X_FIELD(instr) ((instr)&0x000F)
+#define SH_D_FIELD(instr) ((instr)&0x0020)
+#define SH_T_FIELD(instr) ((instr)&0x0010)
+#define SH_X_FIELD(instr) ((instr)&0x000F)
 
 // Register names
 #define SP 15

@@ -133,10 +133,10 @@ void cpu_step(){
       }
     }
   else{                         // Miscellaneous
-    uword d;
+    uword d, x, reg;
     int was_odd;
-    uword reg;
     vaddr temp_pc;
+    udword dw, result;
 
     switch(MISC_OP(instr)){
       case  0:                  // 11 0000 aaaa l i rrrr    jmp/here/call/ret
@@ -153,6 +153,7 @@ void cpu_step(){
         d=was_odd?(d&255):(d>>8);
         if(MISC_OP(instr)&1)d|=(d&128)?0xFF00:0;
         cpu_write_reg(A_FIELD(instr), d);
+        reflect_in_flags_zn(d);
         break;
 
       case  4:                  // 11 0100 aaaa l i rrrr    sw
@@ -174,6 +175,7 @@ void cpu_step(){
         d=readw_yop(instr, 0);
         bus_writew(reg, d);
         cpu_write_reg(A_FIELD(instr), reg-2);
+        reflect_in_flags_zn(d);
         break;
 
       case  9:                  // 11 1001 aaaa l i rrrr    pop     (++a) -> y
@@ -181,6 +183,7 @@ void cpu_step(){
         cpu_write_reg(A_FIELD(instr), reg);
         d=bus_readw(reg);
         writew_yop(instr, d);
+        reflect_in_flags_zn(d);
         break;
 
       case 10:                  // 11 1010 aaaa l i rrrr    xchg
@@ -190,6 +193,7 @@ void cpu_step(){
         cpu_write_reg(A_FIELD(instr), d);
         cpu_write_pc(temp_pc);
         writew_yop(instr, reg);
+        reflect_in_flags_zn(d);
         break;
 
       case 11:                  // 11 1011 aaaa l i rrrr    
@@ -197,7 +201,24 @@ void cpu_step(){
 
       case 12:  // 11 1100 aaaa d t xxxx  logical shift, d selects left/right
                 //                        t selects type R/K for "x" operand
-        // ***
+        reg=A_FIELD(instr);
+        if(SH_T_FIELD(instr))x=cpu_read_reg(SH_X_FIELD(instr));
+        else{x=SH_X_FIELD(instr); if(!x)x=16;}
+        dw=cpu_read_reg(reg);
+        if(SH_D_FIELD(instr)){
+          dw=(dw<<1)|CF;
+          dw>>=x;
+          cpu_write_cflag(dw&1);
+          result=dw>>1;
+          }
+        else{
+          dw=dw|(CF<<16);
+          dw<<=x;
+          cpu_write_cflag(!!(dw&0x10000L));
+          result=dw&0xFFFF;
+          }
+        cpu_write_reg(reg, result);
+        reflect_in_flags_zn(result);
         break;
 
       case 13:  // 11 1101 aaaa d t xxxx  arithmetic shift
