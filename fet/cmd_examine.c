@@ -15,7 +15,7 @@ int cmd_examine(int again, char **argv){
 
   ++argv;
 
-  if(*argv)USAGE()
+  if(!*argv)USAGE()
 
   while(*argv){
     if(**argv=='-'){
