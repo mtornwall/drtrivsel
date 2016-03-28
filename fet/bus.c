@@ -85,7 +85,6 @@ ubyte bus_readb(paddr addr){
   }
 
 uword bus_readw(paddr addr){
-  addr &= ~1;
   device *dev=addr_to_dev(addr);
   if(!dev){
     signal_bus_error(BERR_RW, addr);
@@ -104,7 +103,6 @@ void bus_writeb(paddr addr, ubyte val){
   }
 
 void bus_writew(paddr addr, uword val){
-  addr &= ~1;
   device *dev=addr_to_dev(addr);
   if(!dev){
     signal_bus_error(BERR_WW, addr);
