@@ -129,6 +129,7 @@ void cpu_step(){
     if(dojump){
       disp=instr&0x3FF;
       if(disp&0x200)disp|=~((vaddr)0x3FF);  // Sign-extend
+      disp=(disp<<1)&0xFFFF;                // Unit is words, not bytes
       cpu_write_pc(cpu_read_pc()+disp);
       }
     }

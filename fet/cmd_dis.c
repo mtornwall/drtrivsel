@@ -54,7 +54,7 @@ static int disassemble(char *to, paddr addr){
     return 1;
     }
   else if(!(instr&0x4000)){     // Relative jumps   10 cccc dddddddddd
-    vaddr dest=addr+2+DISP(instr);
+    vaddr dest=(addr+2+(DISP(instr)<<1))&0xFFFF;
     static char *j[]={"jlu", "je", "jn", "jv", "jges", "jleu", "jles", "tarp",
                       "jgeu", "jne", "jp", "jnv", "jls", "jgu", "jgs", "j"};
     sprintf(to, "%s 0x%04X", j[(instr&0x3C00)>>10], (unsigned)dest);
