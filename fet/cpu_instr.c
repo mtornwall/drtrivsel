@@ -63,18 +63,18 @@ void cpu_step(){
     udword a=cpu_read_reg(A_FIELD(instr));
     udword result;
     if(!(instr&0x4000)){        // Arithmetic       0 0scdf aaaa l i rrrr
-      uword carry_in=S_FIELD(instr)?CF:0;
+      uword carry_in=S_FIELD(instr)?0:CF;
       if(C_FIELD(instr))carry_in=1-carry_in;
 
-      if(F_FIELD(instr)){       // add, adc, inc, b+0, b+c, shl, rol, $1
-        result=a+b+carry_in;
-        cpu_write_vflag(((a&0x8000) == (b&0x8000)) &&
-                        ((a&0x8000) != (result&0x8000)));
-        }
-      else{                     // sub, sbb, dec, b-0, b-1+c, -c
+      if(F_FIELD(instr)){       // sub, sbb, dec, b-0, b-1+c, -c
         result=a-b-1+carry_in;
         cpu_write_vflag(((a&0x8000) != (b&0x8000)) &&
                         ((b&0x8000) == (result&0x8000)));
+        }
+      else{                     // add, adc, inc, b+0, b+c, shl, rol, $1
+        result=a+b+carry_in;
+        cpu_write_vflag(((a&0x8000) == (b&0x8000)) &&
+                        ((a&0x8000) != (result&0x8000)));
         }
 
       cpu_write_cflag(result&0x10000);
