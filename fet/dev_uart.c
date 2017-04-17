@@ -7,18 +7,24 @@
 #include<unistd.h>
 #include<sys/wait.h>
 #include<errno.h>
+#include <poll.h>
 #include"fet.h"
 
 
 typedef struct{
   device dev;
   int ifd, ofd;
+  struct pollfd pifd, pofd;
   pid_t xterm_pid;
   }uart;
 
 device dev_uart;  // Defined at the bottom of this file
 
 enum{BACKEND_PTY, BACKEND_FILE, BACKEND_NULL};
+
+#define DATA_IN_REG    0
+#define DATA_OUT_REG   0
+#define STATUS_REG     1
 
 static pid_t xterm_killpid;
 
@@ -121,6 +127,7 @@ static int init(device *_dev){
 
   switch(itype){
     case BACKEND_PTY: dev->ifd=ptm; break;
+    case BACKEND_NULL: infile="/dev/null";
     case BACKEND_FILE: 
       dev->ifd=open(infile, O_RDONLY);
       if(dev->ifd<0){
@@ -128,11 +135,11 @@ static int init(device *_dev){
         goto fail;
         }
       break;
-    case BACKEND_NULL: break;
     }
 
   switch(otype){
     case BACKEND_PTY: dev->ofd=ptm; break;
+    case BACKEND_NULL: outfile="/dev/null";
     case BACKEND_FILE:
       dev->ofd=open(outfile, O_WRONLY);
       if(dev->ofd<0){
@@ -140,8 +147,10 @@ static int init(device *_dev){
         goto fail;
         }
       break;
-    case BACKEND_NULL: break;
     }
+
+  dev->pifd.fd=dev->ifd; dev->pifd.events=POLLIN;
+  dev->pofd.fd=dev->ofd; dev->pofd.events=POLLOUT;
 
   if(xterm && ptm!=-1){
     pid_t xterm_pid;
@@ -211,33 +220,50 @@ fail:
   return -1;
   }
 
+static int data_received(uart *dev){
+  return poll(&(dev->pifd), 1, 0)>0;
+  }
+
+static int xmit_ready(uart *dev){
+  return poll(&(dev->pofd), 1, 0)>0;
+  }
+
 static void writeb(device *_dev, paddr a, ubyte d){
   uart *dev=(uart *)_dev;
   switch(a){
-    case 0:  // Data out register
-      write(dev->ofd, &d, 1);
+    case DATA_OUT_REG:
+      if(xmit_ready(dev))
+        write(dev->ofd, &d, 1);
       break;
     }
   }
 
 static void writew(device *_dev, paddr a, uword d){
-//  uart *dev=(uart *)_dev;
+  writeb(_dev, a, d);
   }
 
 static ubyte readb(device *_dev, paddr a){
   uart *dev=(uart *)_dev;
-  char c;
+  static ubyte last_recd;
+  ubyte status;
+
   switch(a){
-    case 0:  // Data in register
-      read(dev->ifd, &c, 1);
-      return c;
+    case DATA_IN_REG:
+      if(data_received(dev))
+        read(dev->ifd, &last_recd, 1);  // *** Do something about read errors
+      return last_recd;
+    case STATUS_REG:
+      status=0;
+      status|=data_received(dev)<<0;
+      status|=xmit_ready(dev)<<1;
+      return status;
     }
+
   return 0;
   }
 
 static uword readw(device *_dev, paddr a){
-//  uart *dev=(uart *)_dev;
-  return 0;
+  return readb(_dev, a);
   }
 
 static void console_command(device *_dev, char **firstline){
@@ -248,6 +274,7 @@ static void console_command(device *_dev, char **firstline){
 static int lookup_reg(paddr *addr, device *_dev, char *name){
 //  uart *dev=(uart *)_dev;
   if(!strcmp("data", name)){*addr=0; return 0;}
+  if(!strcmp("ctrl", name)||!strcmp("status", name)){*addr=1; return 0;}
   return 1;
   }
 
